@@ -30,6 +30,7 @@ exports.register = async (req, res, next) => {
         const accessToken = jwt.sign(payload, process.env.JWT_SECRET_KEY || 'jhjfdgiwgcbssjgqaz', {
             expiresIn: process.env.JWT_EXPIRE
         });
+        delete user.password;
         res.status(201).json({ accessToken });
     } catch (error) {
         next(error);
@@ -71,3 +72,7 @@ exports.login = async (req, res, next) => {
         next(error);
     }
 };
+
+exports.getMe = async (req, res, next) => {
+    res.status(200).json({ user: req.user });
+}

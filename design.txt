@@ -2,14 +2,22 @@ REGISTER
 POST / auth / register 
 BODY firstName, lastName, emailOrMobile, password , confirmPassword
 RESPONSE
-201 { accessToken : String } ex. { accessToken:''}
-400 { message : String }
+201 {{ accessToken : String }, user: { id:Number , firstName: String}}
+400 { message : String, emailExist:true }
 500 { message : String }
 
 LOGIN
 POST / auth / register 
 BODY  emailOrMobile, password 
 RESPONSE
-200 { accessToken : String,user :{ id: Number, firstName : String} }
+200 { accessToken : String,user : { id: Number, firstName : String} }
 400 { message : String }
 500 { message : String }
+
+GET AUTHENTICATED USER
+GET /auth/me
+HEADER AUTHORIZATION Bearer ACCESS_TOKEN
+RESPONSE 
+200 {user : { id: Number, firstName : String}} //ต้องไม่ส่ง password มาด้วย ข้อมูลจะรั่วไหล
+401 { message : String } //Token หมดอายุ
+500 { message : String } 
