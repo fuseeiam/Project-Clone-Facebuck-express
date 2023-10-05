@@ -1,0 +1,8 @@
+exports.STATUS_PENDING = 'PENDING';
+exports.STATUS_ACCEPTED = 'ACCEPTED';
+
+exports.AUTH_USER = 'AUTH_USER';
+exports.UNKNOWN = 'UNKNOWN';
+exports.FRIEND = 'FRIEND';
+exports.REQUEST = 'REQUESTER';
+exports.RECEIVER = 'RECEIVER';

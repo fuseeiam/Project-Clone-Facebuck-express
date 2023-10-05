@@ -3,7 +3,35 @@ const fs = require('fs/promises');
 const createError = require('../utils/create-error');
 const { upload } = require('../utils/cloudinary-service')
 const prisma = require('../models/prisma');
-const { checkUserIdShema } = require('../validators/user-validator');
+const { checkUserIdSchema } = require('../validators/user-validator');
+const { AUTH_USER, UNKNOWN, STATUS_ACCEPTED, FRIEND, RECEIVER, REQUEST } = require('../config/constants');
+
+const getTargetUserStatusWithAuthUser = async (targetUserId, authUserId) => {
+    if (targetUserId === authUserId) {
+        return AUTH_USER;
+    }
+    const relationship = await prisma.friend.findFirst({
+        where: {
+            OR: [
+                { requesterId: targetUserId, receiverId: authUserId },
+                { requesterId: authUserId, receiverId: targetUserId }
+            ]
+        }
+    });
+
+    if (!relationship) {
+        return UNKNOWN;
+    }
+
+    if (relationship.status === STATUS_ACCEPTED) {
+        return FRIEND;
+    }
+
+    if (relationship.requesterId === authUserId) {
+        return REQUESTER;
+    }
+    return RECEIVER;
+};
 
 exports.updateProfile = async (req, res, next) => {
     try {
@@ -58,7 +86,7 @@ exports.updateProfile = async (req, res, next) => {
 
 exports.getUserById = async (req, res, next) => {
     try {
-        const { error } = checkUserIdShema.validate(req.params);
+        const { error } = checkUserIdSchema.validate(req.params);
         if (error) {
             return next(error);
         }
@@ -69,11 +97,41 @@ exports.getUserById = async (req, res, next) => {
                 id: userId
             }
         });
-
+        let status = null;
         if (user) {
             delete user.password;
+            status = await getTargetUserStatusWithAuthUser(userId, req.user.id);
         }
-        res.status(200).json({ user });
+
+        // if (req.user.id === userId) {
+        //     status = AUTH_USER;
+        // } else {
+        //     // userId 2
+        //     // auth user id : req.user.id
+        //     const relationship = await prisma.friend.findFirst({
+        //         where: {
+        //             OR: [
+        //                 { requesterId: userId, receiverId: req.user.id },
+        //                 { requesterId: req.user.id, receiverId: userId }
+        //             ]
+        //         }
+        //     });
+
+        //     if (!relationship) {
+        //         status = UNKNOWN;
+        //     }
+        //     if (relationship.status === STATUS_ACCEPTED) {
+        //         status = FRIEND;
+        //     }
+
+        //     if (relationship.requesterId === targetUserId) {
+        //         return REQUEST
+        //     }
+        //     return RECEIVER;
+        // };
+
+
+        res.status(200).json({ user, status });
     } catch (err) {
         next(err)
     }
