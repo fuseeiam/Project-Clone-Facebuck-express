@@ -20,4 +20,6 @@ router.get(
 );
 
 router.post('/:postId/like', authenticateMiddleware, likeController.togglelike);
+router.delete('/:postId', authenticateMiddleware, postController.deletePost);
+
 module.exports = router;
